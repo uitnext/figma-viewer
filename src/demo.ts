@@ -7,12 +7,12 @@ import type { FigmaViewerOptions } from "./types";
 export class FigmaViewer extends LitElement {
   protected render() {
     const options: FigmaViewerOptions = {
-      enablePanAndZoom: false,
+      enablePanAndZoom: true,
     };
     const figmaAccessToken = import.meta.env.VITE_FIGMA_ACCESS_TOKEN;
     return html`<figma-viewer
       .accessToken=${figmaAccessToken}
-      url="https://www.figma.com/design/Klm6pxIZSaJFiOMX5FpTul9F/storybook-addon-designs-sample?node-id=64-1&t=4hbIExKhQZeOMUXV-4"
+      url="https://www.figma.com/design/TFXcgvmT6q9KEY4vWYg8XE/Sample-Project---Localhost--Copy-?node-id=1-921&t=DtJIHDbK7DXQA7bo-4"
       .options=${options}
     ></figma-viewer>`;
   }

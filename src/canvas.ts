@@ -71,8 +71,12 @@ export class Canvas extends LitElement {
   static styles = css`
     .canvas {
       position: absolute;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
     }
     .hitbox-layer {
+      width: 100%;
       position: absolute;
       left: 0;
       top: 0;
@@ -102,18 +106,19 @@ export class Canvas extends LitElement {
 
   protected render() {
     return html`<div class="canvas-container">
+      ${this.renderContent()}
       <svg viewBox="0 0 ${this.dimensions.width} ${this.dimensions.height}">
         <foreignObject
           width="${this.dimensions.width}"
           height="${this.dimensions.height}"
         >
-          ${this.renderContent()}
         </foreignObject>
       </svg>
     </div>`;
   }
 
   protected firstUpdated(_changedProperties: PropertyValues): void {
+    this.scale = this.zoomLevel;
     if (this.mySvg) {
       this.svg = d3
         .select(this.mySvg)
@@ -125,16 +130,23 @@ export class Canvas extends LitElement {
 
     if (this.myImg && this.options?.enablePanAndZoom) {
       this.zoomController = panzoom(this.myImg, {
-        minZoom: 0.5,
-        maxZoom: 4,
+        initialZoom: 1 / this.zoomLevel,
+        minZoom: Math.min(0.5, this.zoomLevel),
+        maxZoom: Math.max(4, this.zoomLevel),
       });
 
       this.zoomController.on("transform", () => {
         const transformProperty = this.myImg.style.transform;
         this.hitboxLayer.style.transformOrigin = "0px 0px 0px";
         this.hitboxLayer.style.transform = transformProperty;
-        this.g.attr("transform-origin", "0px 0px 0px");
-        this.g.attr("transform", transformProperty);
+        this.svg.attr("transform-origin", "0px 0px 0px");
+        this.svg.attr("transform", transformProperty);
+
+        const a = this.getScaleFromMatrix(transformProperty);
+        this.scale = 1 / a;
+
+        this.svg.select("g").selectAll("*").remove();
+        this.renderGuides();
       });
     }
   }
@@ -253,7 +265,7 @@ export class Canvas extends LitElement {
       .attr("height", rect.height)
       .attr("fill", "none")
       .attr("stroke", strokeColor)
-      .attr("stroke-width", STROKE_WIDTH * this.zoomLevel);
+      .attr("stroke-width", STROKE_WIDTH * this.scale);
   }
 
   private renderDimensionLabel(node: FigmaNode): void {
@@ -262,15 +274,15 @@ export class Canvas extends LitElement {
 
     const labelX = rect.left + rect.width / 2;
     const labelY = rect.top + rect.height + 5;
-    const marginTop = 10 * this.zoomLevel;
-    const padding = 6 * this.zoomLevel;
-    const borderWidth = 1 * this.zoomLevel;
+    const marginTop = 10 * this.scale;
+    const padding = 6 * this.scale;
+    const borderWidth = 1 * this.scale;
     const text = this.g
       .append("text")
       .attr("x", labelX)
       .attr("y", labelY + marginTop)
       .attr("text-anchor", "middle")
-      .attr("font-size", FONT_SIZE * this.zoomLevel + "px")
+      .attr("font-size", FONT_SIZE * this.scale + "px")
       .attr("fill", "#fff")
       .text(`${Math.round(rect.width)} × ${Math.round(rect.height)}`);
 
@@ -330,7 +342,7 @@ export class Canvas extends LitElement {
       .attr("x2", points[1].x - rootBounds.x)
       .attr("y2", points[1].y - rootBounds.y)
       .attr("stroke", DISTANCE_GUIDE_COLOR)
-      .attr("stroke-width", STROKE_WIDTH * this.zoomLevel);
+      .attr("stroke-width", STROKE_WIDTH * this.scale);
   }
 
   private renderGuideLabel(
@@ -342,11 +354,11 @@ export class Canvas extends LitElement {
     const distance = Math.round(Math.max(horizontalLength, verticalLength));
     const isHorizontal = horizontalLength > verticalLength;
     const constants = {
-      padding: 6 * this.zoomLevel,
-      marginTop: 18 * this.zoomLevel,
-      marginRight: 8 * this.zoomLevel,
-      borderWidth: 1 * this.zoomLevel,
-      fontSize: FONT_SIZE * this.zoomLevel,
+      padding: 6 * this.scale,
+      marginTop: 18 * this.scale,
+      marginRight: 8 * this.scale,
+      borderWidth: 1 * this.scale,
+      fontSize: FONT_SIZE * this.scale,
     };
 
     // Calculate center coordinates
@@ -419,8 +431,8 @@ export class Canvas extends LitElement {
       .attr("x2", bisector[1].x - rootBounds.x)
       .attr("y2", bisector[1].y - rootBounds.y)
       .attr("stroke", DISTANCE_GUIDE_COLOR)
-      .attr("stroke-width", STROKE_WIDTH * this.zoomLevel)
-      .attr("stroke-dasharray", 4 * this.zoomLevel);
+      .attr("stroke-width", STROKE_WIDTH * this.scale)
+      .attr("stroke-dasharray", 4 * this.scale);
   }
 
   private renderHitbox(node: FigmaNode) {
@@ -442,5 +454,14 @@ export class Canvas extends LitElement {
         style="${style}"
       ></div>
     `;
+  }
+
+  private getScaleFromMatrix(matrixString: string) {
+    const values = matrixString
+      .replace("matrix(", "")
+      .replace(")", "")
+      .split(",")
+      .map((val) => parseFloat(val.trim()));
+    return values[0];
   }
 }
