@@ -71,8 +71,11 @@ export class Canvas extends LitElement {
   static styles = css`
     .canvas {
       position: absolute;
+      overflow: hidden;
+      width: 100%;
     }
     .hitbox-layer {
+      width: 100%;
       position: absolute;
       left: 0;
       top: 0;
@@ -102,12 +105,12 @@ export class Canvas extends LitElement {
 
   protected render() {
     return html`<div class="canvas-container">
+      ${this.renderContent()}
       <svg viewBox="0 0 ${this.dimensions.width} ${this.dimensions.height}">
         <foreignObject
           width="${this.dimensions.width}"
           height="${this.dimensions.height}"
         >
-          ${this.renderContent()}
         </foreignObject>
       </svg>
     </div>`;
@@ -145,8 +148,7 @@ export class Canvas extends LitElement {
         src="${this.figmaImageUrl}"
         alt="Figma design"
         style="${createInlineStyles({
-          width: this.dimensions.width + "px",
-          height: this.dimensions.height + "px",
+          width: "100%",
         })}"
       />
       <div

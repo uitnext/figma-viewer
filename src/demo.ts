@@ -7,7 +7,7 @@ import type { FigmaViewerOptions } from "./types";
 export class FigmaViewer extends LitElement {
   protected render() {
     const options: FigmaViewerOptions = {
-      enablePanAndZoom: false,
+      enablePanAndZoom: true,
     };
     const figmaAccessToken = import.meta.env.VITE_FIGMA_ACCESS_TOKEN;
     return html`<figma-viewer
