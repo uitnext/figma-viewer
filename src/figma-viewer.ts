@@ -4,7 +4,7 @@ import "./canvas";
 import "./components/inspector-content";
 import "./components/spinner";
 import * as figma from "./figma";
-interface FigmaNode extends figma.Node, figma.HasBoundingBox {}
+import type { FigmaNode, FigmaViewerOptions } from "./types";
 const FIGMA_API_BASE_URL = "https://api.figma.com";
 
 @customElement("figma-viewer")
@@ -27,6 +27,8 @@ export class FigmaViewer extends LitElement {
 
   @property() accessToken = "";
   @property() url = "";
+  @property()
+  options: FigmaViewerOptions;
 
   @state() private rootNode: FigmaNode;
   @state() private allNodes: FigmaNode[] = [];
@@ -67,6 +69,7 @@ export class FigmaViewer extends LitElement {
         .nodes=${this.allNodes}
         .figmaImageUrl=${this.figmaImageUrl}
         .rootNode=${this.rootNode}
+        .options=${this.options}
       ></canvas-element>
     `;
   }

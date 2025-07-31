@@ -61,3 +61,16 @@ declare global {
   }
 }
 ```
+
+## props
+
+| Property | Type | Default |
+| :------- | :------: | -------: |
+| enablePanAndZoom  | boolean  | false  |
+
+## Events
+
+| Event |
+| :------- |
+| nodeSelected  |
+| nodeHovered  |

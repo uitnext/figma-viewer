@@ -2,9 +2,10 @@ import * as d3 from "d3";
 import { css, html, LitElement, type PropertyValues } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 import panzoom, { type PanZoom } from "panzoom";
-import { getDistanceGuides } from "./distanceGuide";
+import { getDistanceGuides } from "./distance-guide";
 import * as figma from "./figma";
 import { createInlineStyles } from "./style";
+import type { FigmaViewerOptions } from "./types";
 
 interface FigmaNode extends figma.Node, figma.HasBoundingBox {}
 
@@ -42,6 +43,9 @@ export class Canvas extends LitElement {
 
   @property()
   zoomLevel: number;
+
+  @property()
+  options?: FigmaViewerOptions;
 
   @state() private nodeSelected: FigmaNode;
   @state() private nodeHovered: FigmaNode | null;
@@ -119,7 +123,7 @@ export class Canvas extends LitElement {
       this.g = this.svg.append("g");
     }
 
-    if (this.myImg) {
+    if (this.myImg && this.options?.enablePanAndZoom) {
       this.zoomController = panzoom(this.myImg, {
         minZoom: 0.5,
         maxZoom: 4,
@@ -137,7 +141,14 @@ export class Canvas extends LitElement {
 
   private renderContent() {
     return html`<div class="canvas">
-      <img src="${this.figmaImageUrl}" alt="Figma design" />
+      <img
+        src="${this.figmaImageUrl}"
+        alt="Figma design"
+        style="${createInlineStyles({
+          width: this.dimensions.width + "px",
+          height: this.dimensions.height + "px",
+        })}"
+      />
       <div
         class="hitbox-layer"
         style="${createInlineStyles({

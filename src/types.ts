@@ -1,3 +1,5 @@
+import * as figma from "./figma";
+
 export type Hitbox = {
   id: string;
   top: number;
@@ -5,3 +7,8 @@ export type Hitbox = {
   width: number;
   height: number;
 };
+
+export interface FigmaNode extends figma.Node, figma.HasBoundingBox {}
+export interface FigmaViewerOptions {
+  enablePanAndZoom?: boolean;
+}
