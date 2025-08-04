@@ -2,6 +2,8 @@
 // The purpose of these type definition is for our rendering and inspector
 // panel only. Properties not used in those feature would be omitted.
 
+import type { CSSStyle } from "./types";
+
 /**
  * https://www.figma.com/developers/api#color-type
  */
@@ -429,6 +431,10 @@ export function hasTypeStyle(node: Node): node is Node & HasTypeStyle {
     "fontFamily" in node.style &&
     typeof node.style.fontFamily === "string"
   );
+}
+
+export interface HasStyles {
+  styles: CSSStyle[];
 }
 
 export interface HasBoundingBox {

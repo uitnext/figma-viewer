@@ -14,6 +14,11 @@ export class FigmaViewer extends LitElement {
     this.attachShadow({ mode: "open" });
   }
   static styles = css`
+    :host {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
     .loading-container {
       display: flex;
       flex-direction: column;
@@ -22,6 +27,7 @@ export class FigmaViewer extends LitElement {
     }
     .canvas-container {
       width: 100%;
+      height: 100%;
     }
   `;
 

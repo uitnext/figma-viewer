@@ -12,3 +12,8 @@ export interface FigmaNode extends figma.Node, figma.HasBoundingBox {}
 export interface FigmaViewerOptions {
   enablePanAndZoom?: boolean;
 }
+
+export interface CSSStyle {
+  propertyName: string;
+  value: string | number;
+}

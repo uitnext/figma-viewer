@@ -25,12 +25,15 @@ function App() {
         </div>
         <button style={{ marginBottom: 8 }}>Load</button>
       </div>
-      <div style={{ border: "1px solid", minHeight: 600 }}>
+      <div style={{ padding: 10, width: "100%" }}>
         <ReactFigmaViewer
           accessToken={accessToken}
           url={figmaUrl}
           onNodeSelected={onNodeSelected}
           onNodeHovered={onNodeHovered}
+          options={{
+            enablePanAndZoom: true,
+          }}
         />
       </div>
     </div>

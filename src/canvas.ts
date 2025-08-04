@@ -4,10 +4,11 @@ import { customElement, property, query, state } from "lit/decorators.js";
 import panzoom, { type PanZoom } from "panzoom";
 import { getDistanceGuides } from "./distance-guide";
 import * as figma from "./figma";
+import { fromNode } from "./from-node";
 import { createInlineStyles } from "./style";
 import type { FigmaViewerOptions } from "./types";
 
-interface FigmaNode extends figma.Node, figma.HasBoundingBox {}
+interface FigmaNode extends figma.Node, figma.HasBoundingBox, figma.HasStyles {}
 
 interface Rect {
   top: number;
@@ -70,7 +71,7 @@ export class Canvas extends LitElement {
 
   static styles = css`
     .canvas {
-      position: absolute;
+      position: relative;
       overflow: hidden;
       width: 100%;
       height: 100%;
@@ -187,6 +188,7 @@ export class Canvas extends LitElement {
       const node = this.nodes.find((n) => n.id === nodeId);
       if (node) {
         this.nodeSelected = node;
+        this.nodeSelected.styles = fromNode(node);
         const event = new CustomEvent("node-selected", {
           bubbles: true,
           composed: true,
@@ -427,19 +429,19 @@ export class Canvas extends LitElement {
     const rect = this.calculateRect(node);
     if (!rect) return;
 
-    const style = createInlineStyles({
+    const style = {
       width: rect.width + "px",
       height: rect.height + "px",
       left: rect.left + "px",
       top: rect.top + "px",
-    });
-
+    };
+    const inlineStyle = createInlineStyles(style);
     return html`
       <div
         id="${node.id}"
         class="fc-hitbox"
         ?data-select-muted=${node.id === this.nodeSelected?.id}
-        style="${style}"
+        style="${inlineStyle}"
       ></div>
     `;
   }
