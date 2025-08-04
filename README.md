@@ -1,4 +1,6 @@
 # figma-viewer
+[![npm version](https://img.shields.io/npm/v/uitnext-figma-viewer)](https://npmjs.com/package/uitnext-figma-viewer)
+[![npm downloads](https://img.shields.io/npm/dm/uitnext-figma-viewer)](https://npm.chart.dev/uitnext-figma-viewer)
 
 View figma design in web application, support react & lit element.
 
