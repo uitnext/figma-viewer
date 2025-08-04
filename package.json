@@ -2,7 +2,7 @@
   "name": "uitnext-figma-viewer",
   "description": "View figma design in web application, support react & lit element.",
   "private": false,
-  "version": "0.0.5",
+  "version": "0.0.6",
   "type": "module",
   "contributors": [
     {
@@ -26,6 +26,7 @@
   ],
   "dependencies": {
     "@lit/react": "^1.0.8",
+    "@panzoom/panzoom": "^4.6.0",
     "@types/react": "^19.1.9",
     "@vitejs/plugin-react": "^4.7.0",
     "d3": "^7.9.0",

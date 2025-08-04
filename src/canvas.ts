@@ -69,6 +69,9 @@ export class Canvas extends LitElement {
   @state()
   zoomController: PanZoom;
 
+  @state()
+  initialTransform: string;
+
   static styles = css`
     .canvas {
       position: relative;
@@ -122,17 +125,49 @@ export class Canvas extends LitElement {
         initialZoom: 1 / this.scaleFactor,
         minZoom: Math.min(0.5, this.scaleFactor),
         maxZoom: Math.max(4, this.scaleFactor),
+        initialX: 0,
+        initialY: 0,
+        beforeWheel: function (e) {
+          return !e.ctrlKey;
+        },
+        beforeMouseDown: function (e) {
+          var shouldIgnore = !e.altKey;
+          return shouldIgnore;
+        },
       });
 
+      const event = new CustomEvent("init", {
+        bubbles: true,
+        composed: true,
+        detail: {
+          zoomController: {
+            reset: () => {
+              if (this.initialTransform) {
+                this.scale = 1 / this.scaleFactor;
+                this.zoomController.zoomAbs(0, 0, 1 / this.scaleFactor);
+                this.zoomController.moveTo(0, 0);
+                this.renderGuides();
+              }
+            },
+          },
+          canvas: this.svg,
+        },
+      });
+
+      this.dispatchEvent(event);
+
       this.zoomController.on("transform", () => {
+        if (!this.initialTransform) {
+          this.initialTransform = this.myImg.style.transform;
+        }
         const transformProperty = this.myImg.style.transform;
         this.hitboxLayer.style.transformOrigin = "0px 0px 0px";
         this.hitboxLayer.style.transform = transformProperty;
         this.svg.attr("transform-origin", "0px 0px 0px");
         this.svg.attr("transform", transformProperty);
 
-        const a = this.getScaleFromMatrix(transformProperty);
-        this.scale = 1 / a;
+        const scale = this.getScaleFromMatrix(transformProperty);
+        this.scale = 1 / scale;
 
         this.svg.select("g").selectAll("*").remove();
         this.renderGuides();

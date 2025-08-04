@@ -24,12 +24,18 @@ function App() {
   function onNodeHovered(e: CustomEvent) {
     console.log(e.detail);
   }
+
+  function onInit(e: CustomEvent) {
+    const zoomController = e.detail.zoonController;
+    // zoomController.reset()
+  }
   return (
     <ReactFigmaViewer
       accessToken={__YOUR_PERSONAL_ACCESS_TOKEN__}
       url={__FIGMA_LINK_SELECTION__}
       onNodeSelected={onNodeSelected}
       onNodeHovered={onNodeHovered}
+      onInit={onInit}
     />
   );
 }
@@ -53,6 +59,7 @@ export class DemoGreeting extends LitElement {
       .url=${__FIGMA_LINK_SELECTION__}
       @node-selected=""
       @node-hovered=""
+      @init=""
     ></figma-viewer>`;
   }
 }
@@ -76,3 +83,4 @@ declare global {
 | :------- |
 | nodeSelected  |
 | nodeHovered  |
+| init |
