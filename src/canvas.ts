@@ -42,7 +42,7 @@ export class Canvas extends LitElement {
   rootNode: FigmaNode;
 
   @property()
-  zoomLevel: number;
+  scaleFactor: number;
 
   @property()
   options?: FigmaViewerOptions;
@@ -99,26 +99,14 @@ export class Canvas extends LitElement {
       align-items: center;
       margin-top: 8rem;
     }
-    .canvas-container {
-      width: 100%;
-    }
   `;
 
   protected render() {
-    return html`<div class="canvas-container">
-      ${this.renderContent()}
-      <svg viewBox="0 0 ${this.dimensions.width} ${this.dimensions.height}">
-        <foreignObject
-          width="${this.dimensions.width}"
-          height="${this.dimensions.height}"
-        >
-        </foreignObject>
-      </svg>
-    </div>`;
+    return this.renderContent();
   }
 
   protected firstUpdated(_changedProperties: PropertyValues): void {
-    this.scale = this.zoomLevel;
+    this.scale = this.scaleFactor;
     if (this.mySvg) {
       this.svg = d3
         .select(this.mySvg)
@@ -130,9 +118,9 @@ export class Canvas extends LitElement {
 
     if (this.myImg && this.options?.enablePanAndZoom) {
       this.zoomController = panzoom(this.myImg, {
-        initialZoom: 1 / this.zoomLevel,
-        minZoom: Math.min(0.5, this.zoomLevel),
-        maxZoom: Math.max(4, this.zoomLevel),
+        initialZoom: 1 / this.scaleFactor,
+        minZoom: Math.min(0.5, this.scaleFactor),
+        maxZoom: Math.max(4, this.scaleFactor),
       });
 
       this.zoomController.on("transform", () => {

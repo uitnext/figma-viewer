@@ -33,7 +33,9 @@ export class FigmaViewer extends LitElement {
   @state() private rootNode: FigmaNode;
   @state() private allNodes: FigmaNode[] = [];
   @state() private figmaImageUrl = "";
-  @state() private zoomLevel = 0;
+  @state() private scaleFactor = 0;
+
+  private timer: any;
 
   async connectedCallback(): Promise<void> {
     super.connectedCallback();
@@ -43,19 +45,29 @@ export class FigmaViewer extends LitElement {
     if (this.url) {
       this.initializeFigmaData();
     }
+    window.onresize = () => {
+      if (this.timer) {
+        clearTimeout(this.timer);
+      }
+      const elm = this.shadowRoot?.querySelector("div.canvas-container");
+      if (elm) {
+        this.scaleFactor =
+          this.rootNode?.absoluteBoundingBox.width / elm.clientWidth;
+      }
+    };
   }
 
   protected async updated(_changedProperties: PropertyValues) {
     const elm = this.shadowRoot?.querySelector("div.canvas-container");
     if (elm) {
-      this.zoomLevel =
+      this.scaleFactor =
         this.rootNode?.absoluteBoundingBox.width / elm.clientWidth;
     }
   }
 
   render() {
     const dimensions = this.getRootNodeDimensions();
-    if (!dimensions || !this.zoomLevel) {
+    if (!dimensions || !this.scaleFactor) {
       return html`<div class="canvas-container">
         <div class="loading-container">
           <spinner-element></spinner-element>
@@ -63,14 +75,16 @@ export class FigmaViewer extends LitElement {
       </div>`;
     }
     return html`
-      <canvas-element
-        .zoomLevel=${this.zoomLevel}
-        .dimensions=${dimensions}
-        .nodes=${this.allNodes}
-        .figmaImageUrl=${this.figmaImageUrl}
-        .rootNode=${this.rootNode}
-        .options=${this.options}
-      ></canvas-element>
+      <div class="canvas-container">
+        <canvas-element
+          .scaleFactor=${this.scaleFactor}
+          .dimensions=${dimensions}
+          .nodes=${this.allNodes}
+          .figmaImageUrl=${this.figmaImageUrl}
+          .rootNode=${this.rootNode}
+          .options=${this.options}
+        ></canvas-element>
+      </div>
     `;
   }
 
