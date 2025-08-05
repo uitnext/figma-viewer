@@ -20,7 +20,7 @@ export class FigmaViewer extends LitElement {
     return html` <button @click=${this.resetZoom}>Reset zoom</button>
       <figma-viewer
         .accessToken=${figmaAccessToken}
-        url="https://www.figma.com/design/TFXcgvmT6q9KEY4vWYg8XE/Sample-Project---Localhost--Copy-?node-id=1-69&t=SQQ9IChBsLXd0QKe-4"
+        url="https://www.figma.com/design/TFXcgvmT6q9KEY4vWYg8XE/Sample-Project---Localhost--Copy-?node-id=1-921&t=HcjhREwC0gLkcAhl-4"
         .options=${options}
         @node-selected=${this.onNodeSelected}
         @init=${this.onInit}

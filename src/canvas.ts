@@ -54,13 +54,13 @@ export class Canvas extends LitElement {
 
   @state() scale = 1;
 
-  @query("svg.fc-guide-canvas")
+  @query("svg.figma-canvas__guide-layer")
   mySvg: SVGSVGElement;
 
   @query("img")
   myImg: HTMLImageElement;
 
-  @query("div.hitbox-layer")
+  @query("div.figma-canvas__hitbox-layer")
   hitboxLayer: HTMLDivElement;
 
   @state()
@@ -73,35 +73,29 @@ export class Canvas extends LitElement {
   initialTransform: string;
 
   static styles = css`
-    .canvas {
+    .figma-canvas {
       position: relative;
       overflow: hidden;
       width: 100%;
       height: 100%;
     }
-    .hitbox-layer {
+    .figma-canvas__hitbox-layer {
       width: 100%;
       position: absolute;
       left: 0;
       top: 0;
     }
-    .fc-hitbox {
+    .figma-canvas__hitbox {
       position: absolute;
     }
-    .fc-hitbox[data-select-muted] {
+    .figma-canvas__hitbox[data-select-muted] {
       pointer-events: none;
     }
-    .fc-guide-canvas {
+    .figma-canvas__guide-layer {
       position: absolute;
       pointer-events: none;
       top: 0;
       left: 0;
-    }
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 8rem;
     }
   `;
 
@@ -135,7 +129,10 @@ export class Canvas extends LitElement {
           return shouldIgnore;
         },
       });
-
+      const nodes = this.nodes.map((node) => ({
+        ...node,
+        styles: fromNode(node),
+      }));
       const event = new CustomEvent("init", {
         bubbles: true,
         composed: true,
@@ -151,6 +148,7 @@ export class Canvas extends LitElement {
             },
           },
           canvas: this.svg,
+          nodes: nodes,
         },
       });
 
@@ -176,7 +174,7 @@ export class Canvas extends LitElement {
   }
 
   private renderContent() {
-    return html`<div class="canvas">
+    return html`<div class="figma-canvas">
       <img
         src="${this.figmaImageUrl}"
         alt="Figma design"
@@ -186,7 +184,7 @@ export class Canvas extends LitElement {
         })}"
       />
       <div
-        class="hitbox-layer"
+        class="figma-canvas__hitbox-layer"
         style="${createInlineStyles({
           width: this.dimensions.width + "px",
           height: this.dimensions.height + "px",
@@ -197,7 +195,7 @@ export class Canvas extends LitElement {
       >
         ${this.nodes.map((node) => this.renderHitbox(node))}
       </div>
-      <svg class="fc-guide-canvas"></svg>
+      <svg class="figma-canvas__guide-layer"></svg>
     </div>`;
   }
 
@@ -474,7 +472,7 @@ export class Canvas extends LitElement {
     return html`
       <div
         id="${node.id}"
-        class="fc-hitbox"
+        class="figma-canvas__hitbox"
         ?data-select-muted=${node.id === this.nodeSelected?.id}
         style="${inlineStyle}"
       ></div>

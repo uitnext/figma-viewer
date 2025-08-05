@@ -4,11 +4,13 @@ import "./canvas";
 import "./components/inspector-content";
 import "./components/spinner";
 import * as figma from "./figma";
+import { FigmaRest } from "./figma-rest";
 import type { FigmaNode, FigmaViewerOptions } from "./types";
 const FIGMA_API_BASE_URL = "https://api.figma.com";
 
 @customElement("figma-viewer")
 export class FigmaViewer extends LitElement {
+  #figmaRest: FigmaRest;
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -25,7 +27,7 @@ export class FigmaViewer extends LitElement {
       align-items: center;
       margin-top: 8rem;
     }
-    .canvas-container {
+    .figma-viewer {
       width: 100%;
       height: 100%;
     }
@@ -41,21 +43,24 @@ export class FigmaViewer extends LitElement {
   @state() private figmaImageUrl = "";
   @state() private scaleFactor = 0;
 
-  private timer: any;
+  #timer: any;
 
   async connectedCallback(): Promise<void> {
     super.connectedCallback();
+    this.#figmaRest = new FigmaRest(FIGMA_API_BASE_URL, {
+      accessToken: this.accessToken,
+    });
   }
 
   protected firstUpdated(_changedProperties: PropertyValues): void {
     if (this.url) {
-      this.initializeFigmaData();
+      this.#initializeFigmaData();
     }
     window.onresize = () => {
-      if (this.timer) {
-        clearTimeout(this.timer);
+      if (this.#timer) {
+        clearTimeout(this.#timer);
       }
-      const elm = this.shadowRoot?.querySelector("div.canvas-container");
+      const elm = this.shadowRoot?.querySelector("div.figma-viewer");
       if (elm) {
         this.scaleFactor =
           this.rootNode?.absoluteBoundingBox.width / elm.clientWidth;
@@ -64,7 +69,7 @@ export class FigmaViewer extends LitElement {
   }
 
   protected async updated(_changedProperties: PropertyValues) {
-    const elm = this.shadowRoot?.querySelector("div.canvas-container");
+    const elm = this.shadowRoot?.querySelector("div.figma-viewer");
     if (elm) {
       this.scaleFactor =
         this.rootNode?.absoluteBoundingBox.width / elm.clientWidth;
@@ -72,16 +77,16 @@ export class FigmaViewer extends LitElement {
   }
 
   render() {
-    const dimensions = this.getRootNodeDimensions();
+    const dimensions = this.#getRootNodeDimensions();
     if (!dimensions || !this.scaleFactor) {
-      return html`<div class="canvas-container">
+      return html`<div class="figma-viewer">
         <div class="loading-container">
           <spinner-element></spinner-element>
         </div>
       </div>`;
     }
     return html`
-      <div class="canvas-container">
+      <div class="figma-viewer">
         <canvas-element
           .scaleFactor=${this.scaleFactor}
           .dimensions=${dimensions}
@@ -94,8 +99,8 @@ export class FigmaViewer extends LitElement {
     `;
   }
 
-  private async initializeFigmaData(): Promise<void> {
-    const { fileKey, nodeId } = this.parseUrl();
+  async #initializeFigmaData(): Promise<void> {
+    const { fileKey, nodeId } = this.#parseUrl();
     if (!fileKey || !nodeId) {
       console.error("Invalid Figma URL: missing fileKey or nodeId");
       return;
@@ -104,8 +109,8 @@ export class FigmaViewer extends LitElement {
     try {
       // Load image and spec in parallel
       const [imageUrl, rootNode] = await Promise.all([
-        this.getFigmaImage(fileKey, nodeId),
-        this.getFigmaSpec(fileKey, nodeId),
+        this.#figmaRest.getFigmaImage(fileKey, nodeId),
+        this.#figmaRest.getFigmaSpec(fileKey, nodeId),
       ]);
 
       this.figmaImageUrl = imageUrl;
@@ -116,13 +121,13 @@ export class FigmaViewer extends LitElement {
       }
 
       this.rootNode = rootNode;
-      this.allNodes = this.collectVisibleNodes(rootNode);
+      this.allNodes = this.#collectVisibleNodes(rootNode);
     } catch (error) {
       console.error("Failed to load Figma data:", error);
     }
   }
 
-  private parseUrl(): { fileKey: string | null; nodeId: string | null } {
+  #parseUrl(): { fileKey: string | null; nodeId: string | null } {
     try {
       const url = new URL(this.url);
       const fileKey = url.pathname.split("/")[2];
@@ -134,7 +139,7 @@ export class FigmaViewer extends LitElement {
     }
   }
 
-  private collectVisibleNodes(rootNode: FigmaNode): FigmaNode[] {
+  #collectVisibleNodes(rootNode: FigmaNode): FigmaNode[] {
     const nodes: FigmaNode[] = [];
     for (const node of figma.walk(rootNode)) {
       if (node.visible !== false && figma.hasBoundingBox(node)) {
@@ -144,7 +149,7 @@ export class FigmaViewer extends LitElement {
     return nodes;
   }
 
-  private getRootNodeDimensions(): { width: number; height: number } | null {
+  #getRootNodeDimensions(): { width: number; height: number } | null {
     if (!this.rootNode?.absoluteBoundingBox) {
       return null;
     }
@@ -152,48 +157,6 @@ export class FigmaViewer extends LitElement {
       width: this.rootNode.absoluteBoundingBox.width,
       height: this.rootNode.absoluteBoundingBox.height,
     };
-  }
-
-  private async getFigmaSpec(
-    fileKey: string,
-    nodeId: string
-  ): Promise<figma.Node> {
-    const response = await fetch(
-      `${FIGMA_API_BASE_URL}/v1/files/${fileKey}/nodes?ids=${nodeId}`,
-      {
-        headers: {
-          "X-Figma-Token": this.accessToken,
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch Figma spec: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.nodes[nodeId].document as figma.Node;
-  }
-
-  private async getFigmaImage(
-    fileKey: string,
-    nodeId: string
-  ): Promise<string> {
-    const response = await fetch(
-      `${FIGMA_API_BASE_URL}/v1/images/${fileKey}?ids=${nodeId}&format=svg`,
-      {
-        headers: {
-          "X-Figma-Token": this.accessToken,
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch Figma image: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.images[nodeId];
   }
 }
 

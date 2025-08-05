@@ -17,3 +17,10 @@ export interface CSSStyle {
   propertyName: string;
   value: string | number;
 }
+
+export interface BoundingBox {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
