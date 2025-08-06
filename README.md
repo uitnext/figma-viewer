@@ -25,9 +25,8 @@ function App() {
     console.log(e.detail);
   }
 
-  function onInit(e: CustomEvent) {
-    const zoomController = e.detail.zoonController;
-    // zoomController.reset()
+  function onLoaded(e: CustomEvent) {
+    console.log(e.detail);
   }
   return (
     <ReactFigmaViewer
@@ -35,7 +34,7 @@ function App() {
       url={__FIGMA_LINK_SELECTION__}
       onNodeSelected={onNodeSelected}
       onNodeHovered={onNodeHovered}
-      onInit={onInit}
+      onLoaded={onLoaded}
     />
   );
 }
@@ -59,7 +58,7 @@ export class DemoGreeting extends LitElement {
       .url=${__FIGMA_LINK_SELECTION__}
       @node-selected=""
       @node-hovered=""
-      @init=""
+      @loaded=""
     ></figma-viewer>`;
   }
 }
@@ -79,8 +78,8 @@ declare global {
 
 ## Events
 
-| Event |
-| :------- |
-| nodeSelected  |
-| nodeHovered  |
-| init |
+| Lit Event | React Event |
+| :------- | :------- |
+| nodeSelected | onNodeSelected |
+| nodeHovered | onNodeHovered |
+| loaded | onLoaded |
