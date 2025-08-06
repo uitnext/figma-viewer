@@ -8,6 +8,6 @@ export const ReactFigmaViewer = createComponent({
   events: {
     onNodeSelected: "node-selected" as EventName<CustomEvent>,
     onNodeHovered: "node-hovered" as EventName<CustomEvent>,
-    onInit: "init" as EventName<CustomEvent>,
+    onLoaded: "loaded" as EventName<CustomEvent>,
   },
 });
