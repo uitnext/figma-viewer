@@ -8,7 +8,10 @@ export type Hitbox = {
   height: number;
 };
 
-export interface FigmaNode extends figma.Node, figma.HasBoundingBox {}
+export interface FigmaNode
+  extends figma.Node,
+    figma.HasBoundingBox,
+    figma.HasBase64Image {}
 export interface FigmaViewerOptions {
   enablePanAndZoom?: boolean;
 }

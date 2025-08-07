@@ -15,25 +15,33 @@ export class FigmaViewer extends LitElement {
       height: 100%;
     }
   `;
+  controller: any;
+  nodeSelected: any;
   protected render() {
     const options: FigmaViewerOptions = {
       enablePanAndZoom: true,
     };
     const figmaAccessToken = import.meta.env.VITE_FIGMA_ACCESS_TOKEN;
-    return html` <figma-viewer
-      .accessToken=${figmaAccessToken}
-      url="https://www.figma.com/design/pkDMG0NmBh9G52B57JNWN5/-INTERNAL--GENSAI-Platform_design?node-id=6344-2613&t=FJFU2QZuiOn6eHa5-4"
-      .options=${options}
-      @node-selected=${this.onNodeSelected}
-      @loaded=${this.onLoaded}
-    ></figma-viewer>`;
+    return html` <button @click=${this.exportImage}>Export image</button>
+      <figma-viewer
+        .accessToken=${figmaAccessToken}
+        url="https://www.figma.com/design/TFXcgvmT6q9KEY4vWYg8XE/Sample-Project---Localhost--Copy-?node-id=1-545&t=o3XinfXHTmzpysq8-4"
+        .options=${options}
+        @node-selected=${this.onNodeSelected}
+        @loaded=${this.onLoaded}
+      ></figma-viewer>`;
+  }
+
+  private async exportImage() {
+    const b64 = await this.controller.exportImage(this.nodeSelected);
+    console.log(b64);
   }
 
   private onNodeSelected(e: CustomEvent) {
-    console.log(e.detail);
+    this.nodeSelected = e.detail;
   }
 
   private onLoaded(e: CustomEvent) {
-    console.log("onLoaded", e);
+    this.controller = e.detail.controller;
   }
 }

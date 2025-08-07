@@ -660,3 +660,7 @@ export interface Rect {
   width: number;
   height: number;
 }
+
+export interface HasBase64Image {
+  base64Image?: string;
+}

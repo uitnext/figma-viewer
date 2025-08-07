@@ -12,6 +12,7 @@ import * as figma from "./figma";
 import { FigmaRest } from "./figma-rest";
 import { fromNode } from "./from-node";
 import type { FigmaNode } from "./types";
+import { urlToBase64 } from "./utils";
 
 const FIGMA_API_BASE_URL = "https://api.figma.com";
 
@@ -58,6 +59,12 @@ export class FigmaViewer extends LitElement {
   @state()
   g: d3.Selection<SVGGElement, unknown, null, undefined>;
 
+  @state()
+  image: HTMLImageElement;
+
+  @state()
+  imageBas64: string;
+
   #figmaRest: FigmaRest;
   protected async firstUpdated(_changedProperties: PropertyValues) {
     this.#figmaRest = new FigmaRest(FIGMA_API_BASE_URL, {
@@ -71,14 +78,17 @@ export class FigmaViewer extends LitElement {
         this.#figmaRest.getFigmaSpec(fileKey, nodeId),
         this.#figmaRest.getFigmaImage(fileKey, nodeId),
       ]);
+
+      this.imageBas64 = (await urlToBase64(imageUrl)) as string;
+
       if (!figma.hasBoundingBox(rootNode)) {
         return;
       }
 
-      const image = new Image();
-      image.onload = () => {
-        const width = image.width;
-        const height = image.height;
+      this.image = new Image();
+      this.image.onload = () => {
+        const width = this.image.width;
+        const height = this.image.height;
         const scaleFactor = width / elm.clientWidth;
         this.scale = scaleFactor;
 
@@ -158,12 +168,48 @@ export class FigmaViewer extends LitElement {
           detail: {
             svg: this.svg,
             nodes: nodes,
+            controller: {
+              exportImage: (node: FigmaNode) => {
+                return new Promise((resolve, reject) => {
+                  if (!node || !figma.hasBoundingBox(node)) {
+                    return reject("Can't find any node to selected.");
+                  }
+                  const rect = this.#calculateRect(rootNode, node);
+                  if (rect) {
+                    const image = new Image();
+                    image.onload = () => {
+                      const canvas = document.createElement("canvas");
+                      const ctx = canvas.getContext("2d");
+                      canvas.width = rect?.width;
+                      canvas.height = rect?.height;
+                      ctx?.drawImage(
+                        image,
+                        rect.left,
+                        rect.top,
+                        rect?.width,
+                        rect?.height,
+                        0,
+                        0,
+                        rect?.width,
+                        rect?.height
+                      );
+                      const croppedImageData = canvas.toDataURL("image/png");
+                      resolve(croppedImageData);
+                    };
+                    image.src = this.imageBas64;
+                  } else {
+                    reject("unknown error");
+                  }
+                });
+              },
+            },
           },
         });
 
         this.dispatchEvent(event);
       };
-      image.src = imageUrl;
+      this.image.crossOrigin = "Anonymous";
+      this.image.src = imageUrl;
     }
   }
 
