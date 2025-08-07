@@ -12,7 +12,7 @@ import * as figma from "./figma";
 import { FigmaRest } from "./figma-rest";
 import { fromNode } from "./from-node";
 import type { FigmaNode } from "./types";
-import { urlToBase64 } from "./utils";
+import { urlToBlobUrl } from "./utils";
 
 const FIGMA_API_BASE_URL = "https://api.figma.com";
 
@@ -63,7 +63,7 @@ export class FigmaViewer extends LitElement {
   image: HTMLImageElement;
 
   @state()
-  imageBas64: string;
+  imageBlobUrl: string;
 
   #figmaRest: FigmaRest;
   protected async firstUpdated(_changedProperties: PropertyValues) {
@@ -79,7 +79,7 @@ export class FigmaViewer extends LitElement {
         this.#figmaRest.getFigmaImage(fileKey, nodeId),
       ]);
 
-      this.imageBas64 = (await urlToBase64(imageUrl)) as string;
+      this.imageBlobUrl = await urlToBlobUrl(imageUrl);
 
       if (!figma.hasBoundingBox(rootNode)) {
         return;
@@ -95,12 +95,12 @@ export class FigmaViewer extends LitElement {
         window.onresize = () => {
           this.scale = width / elm.clientWidth;
           svg.call(zoom.transform, d3.zoomIdentity.scale(1 / this.scale));
+          svg.attr("height", height * (1 / this.scale));
         };
-
         const svg = d3
           .select(this.svg)
           .attr("width", "100%")
-          .attr("height", "100%");
+          .attr("height", height * (1 / this.scale));
         const g = svg.append("g");
         this.g = g;
 
@@ -108,7 +108,10 @@ export class FigmaViewer extends LitElement {
           .zoom()
           .scaleExtent([0.5, 5])
           .filter(function (event) {
-            return !event.type.includes("dblclick");
+            return (
+              !event.type.includes("dblclick") &&
+              (event.altKey || event.type.includes("mousedown"))
+            );
           })
           .on("zoom", (event) => {
             this.scale = 1 / event.transform.k;
@@ -169,47 +172,16 @@ export class FigmaViewer extends LitElement {
             svg: this.svg,
             nodes: nodes,
             controller: {
-              exportImage: (node: FigmaNode) => {
-                return new Promise((resolve, reject) => {
-                  if (!node || !figma.hasBoundingBox(node)) {
-                    return reject("Can't find any node to selected.");
-                  }
-                  const rect = this.#calculateRect(rootNode, node);
-                  if (rect) {
-                    const image = new Image();
-                    image.onload = () => {
-                      const canvas = document.createElement("canvas");
-                      const ctx = canvas.getContext("2d");
-                      canvas.width = rect?.width;
-                      canvas.height = rect?.height;
-                      ctx?.drawImage(
-                        image,
-                        rect.left,
-                        rect.top,
-                        rect?.width,
-                        rect?.height,
-                        0,
-                        0,
-                        rect?.width,
-                        rect?.height
-                      );
-                      const croppedImageData = canvas.toDataURL("image/png");
-                      resolve(croppedImageData);
-                    };
-                    image.src = this.imageBas64;
-                  } else {
-                    reject("unknown error");
-                  }
-                });
-              },
+              exportImage: (nodeId: string) =>
+                this.#exportImage(rootNode, nodeId),
+              exportSvg: (nodeId: string) => this.#exportSvg(nodeId),
             },
           },
         });
 
         this.dispatchEvent(event);
       };
-      this.image.crossOrigin = "Anonymous";
-      this.image.src = imageUrl;
+      this.image.src = this.imageBlobUrl;
     }
   }
 
@@ -479,5 +451,51 @@ export class FigmaViewer extends LitElement {
       width: nodeBounds.width,
       height: nodeBounds.height,
     };
+  }
+
+  #exportImage(rootNode: FigmaNode, nodeId: string) {
+    const node = this.allNodes.find((node) => node.id === nodeId);
+    return new Promise((resolve, reject) => {
+      if (!node || !figma.hasBoundingBox(node)) {
+        return reject("Can't find any node to selected.");
+      }
+      const rect = this.#calculateRect(rootNode, node);
+      if (rect) {
+        const image = new Image();
+        image.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          canvas.width = rect?.width;
+          canvas.height = rect?.height;
+          ctx?.drawImage(
+            image,
+            rect.left,
+            rect.top,
+            rect?.width,
+            rect?.height,
+            0,
+            0,
+            rect?.width,
+            rect?.height
+          );
+          const croppedImageData = canvas.toDataURL("image/png");
+          resolve(croppedImageData);
+        };
+        image.src = this.imageBlobUrl;
+      } else {
+        reject("unknown error");
+      }
+    });
+  }
+
+  async #exportSvg(nodeId: string) {
+    const { fileKey } = this.#parseUrl();
+    if (!fileKey) {
+      return;
+    }
+    const url = await this.#figmaRest.getFigmaImage(fileKey, nodeId, "svg");
+
+    const svgText = await fetch(url).then((res) => res.text());
+    return svgText;
   }
 }

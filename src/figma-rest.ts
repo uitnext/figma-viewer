@@ -34,9 +34,13 @@ export class FigmaRest {
     return res.nodes[nodeId].document as figma.Node;
   }
 
-  async getFigmaImage(fileKey: string, nodeId: string): Promise<string> {
+  async getFigmaImage(
+    fileKey: string,
+    nodeId: string,
+    format = "svg"
+  ): Promise<string> {
     const res = await this.request(
-      `/v1/images/${fileKey}?ids=${nodeId}&format=svg`
+      `/v1/images/${fileKey}?ids=${nodeId}&format=${format}`
     );
     return res.images[nodeId];
   }

@@ -1,15 +1,10 @@
-export async function urlToBase64(url: string) {
+export async function urlToBlobUrl(url: string): Promise<string> {
   try {
     const response = await fetch(url);
     const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    return URL.createObjectURL(blob);
   } catch (error) {
     console.error("Error converting image to Base64:", error);
-    return null;
+    return "";
   }
 }

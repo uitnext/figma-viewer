@@ -16,16 +16,17 @@ export class FigmaViewer extends LitElement {
     }
   `;
   controller: any;
-  nodeSelected: any;
+  selectedNodeId: string;
   protected render() {
     const options: FigmaViewerOptions = {
       enablePanAndZoom: true,
     };
     const figmaAccessToken = import.meta.env.VITE_FIGMA_ACCESS_TOKEN;
-    return html` <button @click=${this.exportImage}>Export image</button>
+    return html` <button @click=${this.exportImage}>export image</button>
+      <button @click=${this.exportSvg}>export svg</button>
       <figma-viewer
         .accessToken=${figmaAccessToken}
-        url="https://www.figma.com/design/TFXcgvmT6q9KEY4vWYg8XE/Sample-Project---Localhost--Copy-?node-id=1-545&t=o3XinfXHTmzpysq8-4"
+        url="https://www.figma.com/design/TFXcgvmT6q9KEY4vWYg8XE/Sample-Project---Localhost--Copy-?node-id=1-69&t=o3XinfXHTmzpysq8-4"
         .options=${options}
         @node-selected=${this.onNodeSelected}
         @loaded=${this.onLoaded}
@@ -33,12 +34,17 @@ export class FigmaViewer extends LitElement {
   }
 
   private async exportImage() {
-    const b64 = await this.controller.exportImage(this.nodeSelected);
-    console.log(b64);
+    const output = await this.controller.exportImage(this.selectedNodeId);
+    console.log(output);
+  }
+
+  private async exportSvg() {
+    const output = await this.controller.exportSvg(this.selectedNodeId);
+    console.log(output);
   }
 
   private onNodeSelected(e: CustomEvent) {
-    this.nodeSelected = e.detail;
+    this.selectedNodeId = e.detail.id;
   }
 
   private onLoaded(e: CustomEvent) {
