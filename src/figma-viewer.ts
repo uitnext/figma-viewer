@@ -82,6 +82,11 @@ export class FigmaViewer extends LitElement {
         const scaleFactor = width / elm.clientWidth;
         this.scale = scaleFactor;
 
+        window.onresize = () => {
+          this.scale = width / elm.clientWidth;
+          svg.call(zoom.transform, d3.zoomIdentity.scale(1 / this.scale));
+        };
+
         const svg = d3
           .select(this.svg)
           .attr("width", "100%")
