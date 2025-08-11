@@ -65,6 +65,9 @@ export class FigmaViewer extends LitElement {
   @state()
   imageBlobUrl: string;
 
+  @state()
+  rootNode: FigmaNode;
+
   #figmaRest: FigmaRest;
   protected async firstUpdated(_changedProperties: PropertyValues) {
     this.#figmaRest = new FigmaRest(FIGMA_API_BASE_URL, {
@@ -84,6 +87,8 @@ export class FigmaViewer extends LitElement {
       if (!figma.hasBoundingBox(rootNode)) {
         return;
       }
+
+      this.rootNode = rootNode;
 
       this.image = new Image();
       this.image.onload = () => {
@@ -175,6 +180,7 @@ export class FigmaViewer extends LitElement {
               exportImage: (nodeId: string) =>
                 this.#exportImage(rootNode, nodeId),
               exportSvg: (nodeId: string) => this.#exportSvg(nodeId),
+              highlightNode: (nodeId: string) => this.#highlightNode(nodeId),
             },
           },
         });
@@ -240,6 +246,7 @@ export class FigmaViewer extends LitElement {
             .append("rect")
             .classed("figma-node", true)
             .attr("id", child.id)
+            .attr("data-id", "n_" + child.id.replace(":", "_"))
             .attr("width", rect.width)
             .attr("height", rect.height)
             .attr("fill", "transparent")
@@ -497,5 +504,13 @@ export class FigmaViewer extends LitElement {
 
     const svgText = await fetch(url).then((res) => res.text());
     return svgText;
+  }
+
+  async #highlightNode(nodeId: string) {
+    const node = this.g.select(`[data-id=n_${nodeId.replace(":", "_")}]`);
+    if (node) {
+      this.nodeSelected = node;
+      this.#draw(this.rootNode);
+    }
   }
 }

@@ -24,6 +24,7 @@ export class FigmaViewer extends LitElement {
     const figmaAccessToken = import.meta.env.VITE_FIGMA_ACCESS_TOKEN;
     return html` <button @click=${this.exportImage}>export image</button>
       <button @click=${this.exportSvg}>export svg</button>
+      <button @click=${this.hightlightNode}>Highlight Node</button>
       <figma-viewer
         .accessToken=${figmaAccessToken}
         url="https://www.figma.com/design/TFXcgvmT6q9KEY4vWYg8XE/Sample-Project---Localhost--Copy-?node-id=1-69&t=o3XinfXHTmzpysq8-4"
@@ -41,6 +42,10 @@ export class FigmaViewer extends LitElement {
   private async exportSvg() {
     const output = await this.controller.exportSvg(this.selectedNodeId);
     console.log(output);
+  }
+
+  private async hightlightNode() {
+    this.controller.highlightNode("1:160");
   }
 
   private onNodeSelected(e: CustomEvent) {
